@@ -61,6 +61,8 @@ class NotificationSettings(_EnvSettings):
     gotify_token: Optional[str] = _env_field(None, "GOTIFY_TOKEN")
     bark_url: Optional[str] = _env_field(None, "BARK_URL")
     wx_bot_url: Optional[str] = _env_field(None, "WX_BOT_URL")
+    feishu_bot_url: Optional[str] = _env_field(None, "FEISHU_BOT_URL")
+    feishu_bot_secret: Optional[str] = _env_field(None, "FEISHU_BOT_SECRET")
     telegram_bot_token: Optional[str] = _env_field(None, "TELEGRAM_BOT_TOKEN")
     telegram_chat_id: Optional[str] = _env_field(None, "TELEGRAM_CHAT_ID")
     telegram_api_base_url: Optional[str] = _env_field(
@@ -80,6 +82,7 @@ class NotificationSettings(_EnvSettings):
         return any([
             self.ntfy_topic_url,
             self.wx_bot_url,
+            self.feishu_bot_url,
             self.gotify_url and self.gotify_token,
             self.bark_url,
             self.telegram_bot_token and self.telegram_chat_id,

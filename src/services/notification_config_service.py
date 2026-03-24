@@ -1,13 +1,17 @@
 """
 通知配置读写与校验服务
 """
-import json
 from urllib.parse import urlparse
 
 from src.infrastructure.config.env_manager import env_manager
 from src.infrastructure.config.settings import (
     DEFAULT_TELEGRAM_API_BASE_URL,
     NotificationSettings,
+)
+from src.services.webhook_config_parser import (
+    WebhookConfigParseError,
+    normalize_webhook_config_text,
+    parse_webhook_config_value,
 )
 
 
@@ -17,6 +21,8 @@ NOTIFICATION_FIELD_MAP = {
     "GOTIFY_TOKEN": "gotify_token",
     "BARK_URL": "bark_url",
     "WX_BOT_URL": "wx_bot_url",
+    "FEISHU_BOT_URL": "feishu_bot_url",
+    "FEISHU_BOT_SECRET": "feishu_bot_secret",
     "TELEGRAM_BOT_TOKEN": "telegram_bot_token",
     "TELEGRAM_CHAT_ID": "telegram_chat_id",
     "TELEGRAM_API_BASE_URL": "telegram_api_base_url",
@@ -33,6 +39,8 @@ SECRET_NOTIFICATION_FIELDS = {
     "BARK_URL",
     "GOTIFY_TOKEN",
     "WX_BOT_URL",
+    "FEISHU_BOT_URL",
+    "FEISHU_BOT_SECRET",
     "TELEGRAM_BOT_TOKEN",
     "WEBHOOK_URL",
     "WEBHOOK_HEADERS",
@@ -49,6 +57,7 @@ URL_FIELDS = {
     "GOTIFY_URL",
     "BARK_URL",
     "WX_BOT_URL",
+    "FEISHU_BOT_URL",
     "TELEGRAM_API_BASE_URL",
     "WEBHOOK_URL",
 }
@@ -77,6 +86,8 @@ def build_notification_settings_response(
         "GOTIFY_TOKEN": "",
         "BARK_URL": "",
         "WX_BOT_URL": "",
+        "FEISHU_BOT_URL": "",
+        "FEISHU_BOT_SECRET": "",
         "TELEGRAM_BOT_TOKEN": "",
         "TELEGRAM_CHAT_ID": notification_settings.telegram_chat_id or "",
         "TELEGRAM_API_BASE_URL": (
@@ -108,6 +119,8 @@ def build_notification_status_flags(
         "gotify_token_set": bool(notification_settings.gotify_token),
         "bark_url_set": bool(notification_settings.bark_url),
         "wx_bot_url_set": bool(notification_settings.wx_bot_url),
+        "feishu_bot_url_set": bool(notification_settings.feishu_bot_url),
+        "feishu_bot_secret_set": bool(notification_settings.feishu_bot_secret),
         "telegram_bot_token_set": bool(notification_settings.telegram_bot_token),
         "telegram_chat_id_set": bool(notification_settings.telegram_chat_id),
         "webhook_url_set": bool(notification_settings.webhook_url),
@@ -128,6 +141,8 @@ def build_configured_channels(
         channels.append("gotify")
     if notification_settings.wx_bot_url:
         channels.append("wecom")
+    if notification_settings.feishu_bot_url:
+        channels.append("feishu")
     if notification_settings.telegram_bot_token and notification_settings.telegram_chat_id:
         channels.append("telegram")
     if notification_settings.webhook_url:
@@ -184,6 +199,8 @@ def load_notification_settings() -> NotificationSettings:
             "gotify_token": _normalize_existing_text(env_manager.get_value("GOTIFY_TOKEN")),
             "bark_url": _normalize_existing_text(env_manager.get_value("BARK_URL")),
             "wx_bot_url": _normalize_existing_text(env_manager.get_value("WX_BOT_URL")),
+            "feishu_bot_url": _normalize_existing_text(env_manager.get_value("FEISHU_BOT_URL")),
+            "feishu_bot_secret": _normalize_existing_text(env_manager.get_value("FEISHU_BOT_SECRET")),
             "telegram_bot_token": _normalize_existing_text(env_manager.get_value("TELEGRAM_BOT_TOKEN")),
             "telegram_chat_id": _normalize_existing_text(env_manager.get_value("TELEGRAM_CHAT_ID")),
             "telegram_api_base_url": (
@@ -243,12 +260,8 @@ def _normalize_notification_values(values: dict) -> dict:
         raw_value = normalized.get(attr_name)
         if raw_value is None:
             continue
-        parsed = _parse_json_field(env_name, raw_value, expect_dict=expect_dict)
-        normalized[attr_name] = json.dumps(
-            parsed,
-            ensure_ascii=False,
-            separators=(",", ":"),
-        )
+        _parse_json_field(env_name, raw_value, expect_dict=expect_dict)
+        normalized[attr_name] = normalize_webhook_config_text(raw_value)
     return normalized
 
 
@@ -293,12 +306,20 @@ def _validate_notification_settings(settings: NotificationSettings) -> None:
         raise NotificationSettingsValidationError(
             "配置 Webhook 高级参数前必须先填写 WEBHOOK_URL"
         )
+    if settings.feishu_bot_secret and not settings.feishu_bot_url:
+        raise NotificationSettingsValidationError(
+            "配置 FEISHU_BOT_SECRET 前必须先填写 FEISHU_BOT_URL"
+        )
 
     if settings.webhook_content_type == "FORM" and settings.webhook_body:
-        parsed_body = json.loads(settings.webhook_body)
+        parsed_body = _parse_json_field(
+            "WEBHOOK_BODY",
+            settings.webhook_body,
+            expect_dict=True,
+        )
         if not isinstance(parsed_body, dict):
             raise NotificationSettingsValidationError(
-                "WEBHOOK_BODY 在 FORM 模式下必须是 JSON 对象"
+                "WEBHOOK_BODY 在 FORM 模式下必须是 JSON 对象或 key=value 键值对格式"
             )
 
 
@@ -329,13 +350,10 @@ def _parse_json_field(
     expect_dict: bool,
 ):
     try:
-        parsed = json.loads(raw_value)
-    except json.JSONDecodeError as exc:
-        raise NotificationSettingsValidationError(
-            f"{field_name} 不是合法 JSON: {exc.msg}"
-        ) from exc
-    if expect_dict and not isinstance(parsed, dict):
-        raise NotificationSettingsValidationError(
-            f"{field_name} 必须是 JSON 对象"
+        return parse_webhook_config_value(
+            raw_value,
+            field_name,
+            expect_dict=expect_dict,
         )
-    return parsed
+    except WebhookConfigParseError as exc:
+        raise NotificationSettingsValidationError(str(exc)) from exc

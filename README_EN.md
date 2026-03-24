@@ -11,7 +11,7 @@ A Playwright and AI-powered multi-task real-time monitoring tool for Xianyu (闲
 - **Multi-Task Concurrency**: Independent configuration for keywords, prices, filters, and AI prompts
 - **SQLite as Primary Storage**: Tasks, results, and price history are persisted in one embedded database instead of repeatedly scanning `jsonl`
 - **Advanced Filtering**: Free shipping, new listing time range, province/city/district filtering
-- **Instant Notifications**: Supports ntfy.sh, WeChat Work (企业微信), Bark, Telegram, Webhook
+- **Instant Notifications**: Supports ntfy.sh, WeChat Work, Feishu, Bark, Telegram, Gotify, and Webhook
 - **Scheduled Tasks**: Cron expression configuration for periodic tasks
 - **Account & Proxy Rotation**: Multi-account management, task-account binding, proxy pool rotation with failure retry
 - **Docker Deployment**: One-click containerized deployment
@@ -195,6 +195,7 @@ cd web-ui && npm run build
 - `GOTIFY_URL` / `GOTIFY_TOKEN`
 - `BARK_URL`
 - `WX_BOT_URL`
+- `FEISHU_BOT_URL` / `FEISHU_BOT_SECRET` (optional when signature verification is enabled)
 - `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` / `TELEGRAM_API_BASE_URL`
 - `WEBHOOK_*`
 

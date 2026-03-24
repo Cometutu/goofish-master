@@ -1,5 +1,9 @@
 import asyncio
+import base64
+import hashlib
+import hmac
 
+from src.infrastructure.external.notification_clients.feishu_bot_client import FeishuBotClient
 from src.infrastructure.external.notification_clients.base import NotificationClient
 from src.infrastructure.external.notification_clients.webhook_client import WebhookClient
 from src.services.notification_service import NotificationService
@@ -76,3 +80,52 @@ def test_webhook_client_renders_json_templates(monkeypatch):
     assert captured["json"]["message"].startswith("价格: 9999")
     assert captured["json"]["link"] == "https://www.goofish.com/item/123"
     assert captured["data"] is None
+
+
+def test_feishu_bot_client_supports_optional_signature(monkeypatch):
+    captured = {}
+
+    class _FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"code": 0, "msg": "success"}
+
+    def _fake_post(url, json=None, headers=None, timeout=None):
+        captured["url"] = url
+        captured["json"] = json
+        captured["headers"] = headers
+        return _FakeResponse()
+
+    monkeypatch.setattr("requests.post", _fake_post)
+    monkeypatch.setattr("time.time", lambda: 1_700_000_000)
+
+    client = FeishuBotClient(
+        bot_url="https://open.feishu.cn/open-apis/bot/v2/hook/demo",
+        bot_secret="top-secret",
+        pcurl_to_mobile=False,
+    )
+
+    asyncio.run(
+        client.send(
+            {
+                "商品标题": "Sony A7M4",
+                "当前售价": "9999",
+                "商品链接": "https://www.goofish.com/item/123",
+            },
+            "价格合适",
+        )
+    )
+
+    expected_sign = base64.b64encode(
+        hmac.new(
+            b"1700000000\ntop-secret",
+            digestmod=hashlib.sha256,
+        ).digest()
+    ).decode("utf-8")
+    assert captured["url"] == "https://open.feishu.cn/open-apis/bot/v2/hook/demo"
+    assert captured["headers"]["Content-Type"] == "application/json"
+    assert captured["json"]["timestamp"] == "1700000000"
+    assert captured["json"]["sign"] == expected_sign
+    assert captured["json"]["content"]["post"]["zh_cn"]["content"][-1][-1]["href"] == "https://www.goofish.com/item/123"

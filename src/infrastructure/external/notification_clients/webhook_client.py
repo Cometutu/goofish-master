@@ -2,11 +2,15 @@
 通用 Webhook 通知客户端
 """
 import asyncio
-import json
 from typing import Any, Dict
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import requests
+
+from src.services.webhook_config_parser import (
+    WebhookConfigParseError,
+    parse_webhook_config_value,
+)
 
 from .base import NotificationClient, NotificationMessage
 
@@ -40,7 +44,11 @@ class WebhookClient(NotificationClient):
             raise RuntimeError("Webhook 未启用")
 
         message = self._build_message(product_data, reason)
-        headers = self._parse_json(self.webhook_headers, "WEBHOOK_HEADERS", expect_dict=True) or {}
+        headers = self._parse_structured_value(
+            self.webhook_headers,
+            "WEBHOOK_HEADERS",
+            expect_dict=True,
+        ) or {}
         final_url = self._build_url(message)
         loop = asyncio.get_running_loop()
 
@@ -66,7 +74,7 @@ class WebhookClient(NotificationClient):
         response.raise_for_status()
 
     def _build_url(self, message: NotificationMessage) -> str:
-        params = self._parse_json(
+        params = self._parse_structured_value(
             self.webhook_query_parameters,
             "WEBHOOK_QUERY_PARAMETERS",
             expect_dict=True,
@@ -86,7 +94,7 @@ class WebhookClient(NotificationClient):
         if not self.webhook_body:
             return None, None
 
-        body_template = self._parse_json(self.webhook_body, "WEBHOOK_BODY")
+        body_template = self._parse_structured_value(self.webhook_body, "WEBHOOK_BODY")
         rendered_body = self._render_template(body_template, message)
 
         if self.webhook_content_type == "JSON":
@@ -103,21 +111,20 @@ class WebhookClient(NotificationClient):
 
         raise ValueError(f"不支持的 WEBHOOK_CONTENT_TYPE: {self.webhook_content_type}")
 
-    def _parse_json(
+    def _parse_structured_value(
         self,
         raw_value: str | None,
         field_name: str,
         expect_dict: bool = False,
     ) -> Any | None:
-        if not raw_value:
-            return None
         try:
-            parsed = json.loads(raw_value)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"{field_name} 不是合法 JSON: {exc.msg}") from exc
-        if expect_dict and not isinstance(parsed, dict):
-            raise ValueError(f"{field_name} 必须是 JSON 对象")
-        return parsed
+            return parse_webhook_config_value(
+                raw_value,
+                field_name,
+                expect_dict=expect_dict,
+            )
+        except WebhookConfigParseError as exc:
+            raise ValueError(str(exc)) from exc
 
     def _render_template(self, value: Any, message: NotificationMessage) -> Any:
         if isinstance(value, str):

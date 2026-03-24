@@ -6,6 +6,8 @@ export interface NotificationSettings {
   GOTIFY_TOKEN?: string
   BARK_URL?: string
   WX_BOT_URL?: string
+  FEISHU_BOT_URL?: string
+  FEISHU_BOT_SECRET?: string
   TELEGRAM_BOT_TOKEN?: string
   TELEGRAM_CHAT_ID?: string
   TELEGRAM_API_BASE_URL?: string
@@ -19,6 +21,8 @@ export interface NotificationSettings {
   BARK_URL_SET?: boolean
   GOTIFY_TOKEN_SET?: boolean
   WX_BOT_URL_SET?: boolean
+  FEISHU_BOT_URL_SET?: boolean
+  FEISHU_BOT_SECRET_SET?: boolean
   TELEGRAM_BOT_TOKEN_SET?: boolean
   WEBHOOK_URL_SET?: boolean
   WEBHOOK_HEADERS_SET?: boolean
@@ -31,6 +35,8 @@ export interface NotificationSettingsUpdate {
   GOTIFY_TOKEN?: string | null
   BARK_URL?: string | null
   WX_BOT_URL?: string | null
+  FEISHU_BOT_URL?: string | null
+  FEISHU_BOT_SECRET?: string | null
   TELEGRAM_BOT_TOKEN?: string | null
   TELEGRAM_CHAT_ID?: string | null
   TELEGRAM_API_BASE_URL?: string | null
@@ -93,6 +99,8 @@ export interface SystemStatus {
     gotify_token_set: boolean
     bark_url_set: boolean
     wx_bot_url_set: boolean
+    feishu_bot_url_set: boolean
+    feishu_bot_secret_set: boolean
     telegram_bot_token_set: boolean
     telegram_chat_id_set: boolean
     webhook_url_set: boolean

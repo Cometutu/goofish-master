@@ -243,6 +243,15 @@ const enUSExtra = {
       urlLabel: 'WeCom Bot URL',
       configuredHint: 'Bot URL is already stored.',
     },
+    feishu: {
+      title: 'Feishu Bot',
+      description: 'Supports Feishu custom bot webhooks, with an optional signing secret.',
+      urlLabel: 'Feishu Bot URL',
+      secretLabel: 'Signing Secret (Optional)',
+      urlConfiguredHint: 'Bot URL is already stored.',
+      secretConfiguredHint: 'Signing secret is already stored.',
+      secretOptionalHint: 'Leave blank if signature verification is not enabled.',
+    },
     telegram: {
       description: 'The bot token is sensitive, while Chat ID and API base URL can be viewed and updated directly.',
       chatIdPlaceholder: 'Example: 123456789',
