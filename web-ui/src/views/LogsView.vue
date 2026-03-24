@@ -103,14 +103,15 @@ async function handleClearLogs() {
 </script>
 
 <template>
-  <div class="h-[calc(100vh-100px)] flex flex-col">
-    <div class="flex justify-between items-center mb-4">
-      <div class="flex items-center gap-4">
+  <div class="flex h-[calc(100vh-100px)] flex-col gap-4">
+    <div class="app-surface p-4">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
         <h1 class="text-2xl font-bold text-gray-800">{{ t('logs.title') }}</h1>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Label class="text-sm text-gray-600">{{ t('logs.task') }}</Label>
           <Select v-model="selectedTaskId">
-            <SelectTrigger class="w-[240px]">
+            <SelectTrigger class="w-full sm:w-[260px]">
               <SelectValue :placeholder="t('logs.selectTask')" />
             </SelectTrigger>
             <SelectContent>
@@ -122,7 +123,7 @@ async function handleClearLogs() {
         </div>
       </div>
       
-      <div class="flex items-center gap-4">
+      <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-end">
         <Button variant="outline" size="sm" :disabled="!selectedTaskId" @click="fetchLogs">
           {{ t('common.refresh') }}
         </Button>
@@ -142,8 +143,9 @@ async function handleClearLogs() {
         </Button>
       </div>
     </div>
+    </div>
 
-    <Card class="flex-1 overflow-hidden flex flex-col">
+    <Card class="app-surface flex flex-1 flex-col overflow-hidden border-none">
       <CardContent class="flex-1 p-0 relative">
         <pre
           ref="logContainer"

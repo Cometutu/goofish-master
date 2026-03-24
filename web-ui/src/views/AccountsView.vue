@@ -123,15 +123,15 @@ onMounted(fetchAccounts)
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">{{ t('accounts.title') }}</h1>
         <p class="text-sm text-gray-500 mt-1">{{ t('accounts.description') }}</p>
       </div>
-      <Button @click="openCreateDialog">{{ t('accounts.add') }}</Button>
+      <Button class="w-full sm:w-auto" @click="openCreateDialog">{{ t('accounts.add') }}</Button>
     </div>
 
-    <Card class="mb-6">
+    <Card class="app-surface mb-6 border-none">
       <CardHeader>
         <CardTitle>{{ t('accounts.cookieGuide.title') }}</CardTitle>
       </CardHeader>
@@ -162,40 +162,65 @@ onMounted(fetchAccounts)
       </CardContent>
     </Card>
 
-    <Card>
+    <Card class="app-surface border-none">
       <CardHeader>
         <CardTitle>{{ t('accounts.list.title') }}</CardTitle>
         <CardDescription>{{ t('accounts.list.description') }}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{{ t('accounts.list.name') }}</TableHead>
-              <TableHead>{{ t('accounts.list.file') }}</TableHead>
-              <TableHead class="text-right">{{ t('accounts.list.actions') }}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-if="isLoading">
-              <TableCell colspan="3" class="h-20 text-center text-muted-foreground">{{ t('common.loading') }}</TableCell>
-            </TableRow>
-            <TableRow v-else-if="accounts.length === 0">
-              <TableCell colspan="3" class="h-20 text-center text-muted-foreground">{{ t('accounts.list.empty') }}</TableCell>
-            </TableRow>
-            <TableRow v-else v-for="account in accounts" :key="account.name">
-              <TableCell class="font-medium">{{ account.name }}</TableCell>
-              <TableCell class="text-sm text-gray-500">{{ account.path }}</TableCell>
-              <TableCell class="text-right">
-                <div class="flex justify-end gap-2">
-                  <Button size="sm" variant="outline" @click="goCreateTask(account.name)">{{ t('accounts.list.createTask') }}</Button>
-                  <Button size="sm" variant="outline" @click="openEditDialog(account.name)">{{ t('accounts.list.update') }}</Button>
-                  <Button size="sm" variant="destructive" @click="openDeleteDialog(account.name)">{{ t('accounts.list.delete') }}</Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+        <div class="space-y-4 md:hidden">
+          <div v-if="isLoading" class="py-10 text-center text-sm text-muted-foreground">{{ t('common.loading') }}</div>
+          <div v-else-if="accounts.length === 0" class="py-10 text-center text-sm text-muted-foreground">{{ t('accounts.list.empty') }}</div>
+          <article
+            v-else
+            v-for="account in accounts"
+            :key="account.name"
+            class="app-surface-subtle p-4"
+          >
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="truncate text-base font-semibold text-slate-900">{{ account.name }}</h3>
+                <Button size="sm" variant="outline" @click="goCreateTask(account.name)">{{ t('accounts.list.createTask') }}</Button>
+              </div>
+              <p class="break-all text-sm text-slate-500">{{ account.path }}</p>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" class="flex-1 min-w-[120px]" @click="openEditDialog(account.name)">{{ t('accounts.list.update') }}</Button>
+              <Button size="sm" variant="destructive" class="flex-1 min-w-[120px]" @click="openDeleteDialog(account.name)">{{ t('accounts.list.delete') }}</Button>
+            </div>
+          </article>
+        </div>
+
+        <div class="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{{ t('accounts.list.name') }}</TableHead>
+                <TableHead>{{ t('accounts.list.file') }}</TableHead>
+                <TableHead class="text-right">{{ t('accounts.list.actions') }}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-if="isLoading">
+                <TableCell colspan="3" class="h-20 text-center text-muted-foreground">{{ t('common.loading') }}</TableCell>
+              </TableRow>
+              <TableRow v-else-if="accounts.length === 0">
+                <TableCell colspan="3" class="h-20 text-center text-muted-foreground">{{ t('accounts.list.empty') }}</TableCell>
+              </TableRow>
+              <TableRow v-else v-for="account in accounts" :key="account.name">
+                <TableCell class="font-medium">{{ account.name }}</TableCell>
+                <TableCell class="text-sm text-gray-500">{{ account.path }}</TableCell>
+                <TableCell class="text-right">
+                  <div class="flex justify-end gap-2">
+                    <Button size="sm" variant="outline" @click="goCreateTask(account.name)">{{ t('accounts.list.createTask') }}</Button>
+                    <Button size="sm" variant="outline" @click="openEditDialog(account.name)">{{ t('accounts.list.update') }}</Button>
+                    <Button size="sm" variant="destructive" @click="openDeleteDialog(account.name)">{{ t('accounts.list.delete') }}</Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
 

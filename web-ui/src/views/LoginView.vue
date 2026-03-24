@@ -45,11 +45,15 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <div class="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-100 px-4">
+    <div aria-hidden="true" class="absolute inset-0">
+      <div class="absolute left-[-10%] top-[-10%] h-72 w-72 rounded-full bg-primary/10 blur-3xl"></div>
+      <div class="absolute bottom-[-10%] right-[-5%] h-72 w-72 rounded-full bg-blue-300/10 blur-3xl"></div>
+    </div>
     <div class="absolute right-6 top-6">
       <LocaleToggle />
     </div>
-    <Card class="w-full max-w-md">
+    <Card class="app-surface relative z-10 w-full max-w-md border-none">
       <CardHeader>
         <CardTitle class="text-2xl text-center">{{ t('login.title') }}</CardTitle>
         <CardDescription class="text-center">
@@ -66,7 +70,7 @@ async function handleLogin() {
             <Label for="password">{{ t('login.password') }}</Label>
             <Input id="password" type="password" v-model="password" required />
           </div>
-          <div v-if="error" class="text-sm text-red-500 font-medium">
+          <div v-if="error" class="text-sm font-medium text-red-500" role="alert">
             {{ error }}
           </div>
         </CardContent>

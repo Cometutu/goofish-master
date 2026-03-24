@@ -22,17 +22,17 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <Card class="overflow-hidden border-slate-200">
+  <Card class="app-surface overflow-hidden border-none">
     <CardHeader>
       <CardTitle>{{ t('rotation.title') }}</CardTitle>
       <CardDescription>{{ t('rotation.description') }}</CardDescription>
     </CardHeader>
     <CardContent v-if="isReady" class="grid gap-6 lg:grid-cols-2">
-      <section class="rounded-[28px] border border-[#d7d0c6] bg-[linear-gradient(145deg,#f6f2e9_0%,#efe8db_100%)] p-5 shadow-[0_14px_30px_rgba(69,52,29,0.08)]">
+      <section class="app-surface-subtle p-5">
         <div class="mb-5 flex items-center justify-between">
           <div>
-            <h3 class="font-semibold text-[#2d261f]">{{ t('rotation.account.title') }}</h3>
-            <p class="text-sm text-[#786858]">{{ t('rotation.account.description') }}</p>
+            <h3 class="font-semibold text-slate-900">{{ t('rotation.account.title') }}</h3>
+            <p class="text-sm text-slate-500">{{ t('rotation.account.description') }}</p>
           </div>
           <Switch v-model:checked="settings.ACCOUNT_ROTATION_ENABLED" />
         </div>
@@ -67,7 +67,7 @@ const emit = defineEmits<{
         </div>
       </section>
 
-      <section class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+      <section class="app-surface-subtle p-5">
         <div class="mb-5 flex items-center justify-between">
           <div>
             <h3 class="font-semibold text-slate-900">{{ t('rotation.proxy.title') }}</h3>
@@ -113,7 +113,7 @@ const emit = defineEmits<{
     <CardContent v-else class="py-8 text-sm text-gray-500">
       {{ t('rotation.loading') }}
     </CardContent>
-    <CardFooter v-if="isReady" class="flex gap-2">
+    <CardFooter v-if="isReady" class="flex justify-end gap-2">
       <Button @click="emit('save')" :disabled="isSaving">{{ t('rotation.save') }}</Button>
     </CardFooter>
   </Card>

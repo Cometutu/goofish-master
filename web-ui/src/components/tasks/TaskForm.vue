@@ -260,17 +260,17 @@ function handleSubmit() {
 <template>
   <form id="task-form" @submit.prevent="handleSubmit">
     <div class="grid gap-6 py-4">
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="task-name" class="text-right">{{ t('tasks.form.taskName') }}</Label>
-        <Input id="task-name" v-model="form.task_name" class="col-span-3" :placeholder="t('tasks.form.taskNamePlaceholder')" required />
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label for="task-name" class="sm:text-right">{{ t('tasks.form.taskName') }}</Label>
+        <Input id="task-name" v-model="form.task_name" class="sm:col-span-3" :placeholder="t('tasks.form.taskNamePlaceholder')" required />
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="keyword" class="text-right">{{ t('tasks.form.keyword') }}</Label>
-        <Input id="keyword" v-model="form.keyword" class="col-span-3" :placeholder="t('tasks.form.keywordPlaceholder')" required />
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label for="keyword" class="sm:text-right">{{ t('tasks.form.keyword') }}</Label>
+        <Input id="keyword" v-model="form.keyword" class="sm:col-span-3" :placeholder="t('tasks.form.keywordPlaceholder')" required />
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{{ t('tasks.form.decisionMode') }}</Label>
-        <div class="col-span-3">
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label class="sm:text-right">{{ t('tasks.form.decisionMode') }}</Label>
+        <div class="sm:col-span-3">
           <Select v-model="form.decision_mode">
             <SelectTrigger>
               <SelectValue :placeholder="t('tasks.form.decisionModePlaceholder')" />
@@ -282,9 +282,9 @@ function handleSubmit() {
           </Select>
         </div>
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="description" class="text-right">{{ t('tasks.form.description') }}</Label>
-        <div class="col-span-3 space-y-1">
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label for="description" class="sm:text-right">{{ t('tasks.form.description') }}</Label>
+        <div class="space-y-1 sm:col-span-3">
           <Textarea
             id="description"
             v-model="form.description"
@@ -295,9 +295,9 @@ function handleSubmit() {
           </p>
         </div>
       </div>
-      <div v-if="form.decision_mode === 'ai'" class="grid grid-cols-4 items-center gap-4">
-        <Label for="analyze-images" class="text-right">{{ t('tasks.form.analyzeImages') }}</Label>
-        <div class="col-span-3 space-y-1">
+      <div v-if="form.decision_mode === 'ai'" class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label for="analyze-images" class="sm:text-right">{{ t('tasks.form.analyzeImages') }}</Label>
+        <div class="space-y-1 sm:col-span-3">
           <Switch id="analyze-images" v-model="form.analyze_images" />
           <p class="text-xs text-gray-500">
             {{ t('tasks.form.analyzeImagesHint') }}
@@ -305,9 +305,9 @@ function handleSubmit() {
         </div>
       </div>
 
-      <div v-if="form.decision_mode === 'keyword'" class="grid grid-cols-4 gap-4">
-        <Label class="text-right pt-2">{{ t('tasks.form.keywordRules') }}</Label>
-        <div class="col-span-3 space-y-2">
+      <div v-if="form.decision_mode === 'keyword'" class="grid gap-2 sm:grid-cols-4 sm:gap-4">
+        <Label class="pt-1 sm:pt-2 sm:text-right">{{ t('tasks.form.keywordRules') }}</Label>
+        <div class="space-y-2 sm:col-span-3">
           <p class="text-xs text-gray-500">
             {{ t('tasks.form.keywordRulesHint') }}
           </p>
@@ -319,21 +319,21 @@ function handleSubmit() {
         </div>
       </div>
 
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{{ t('tasks.form.priceRange') }}</Label>
-        <div class="col-span-3 flex items-center gap-2">
-          <Input type="number" v-model="form.min_price as any" :placeholder="t('tasks.form.minPrice')" />
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label class="sm:text-right">{{ t('tasks.form.priceRange') }}</Label>
+        <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:col-span-3">
+          <Input type="number" v-model="form.min_price as any" :aria-label="t('tasks.form.minPrice')" :placeholder="t('tasks.form.minPrice')" />
           <span>-</span>
-          <Input type="number" v-model="form.max_price as any" :placeholder="t('tasks.form.maxPrice')" />
+          <Input type="number" v-model="form.max_price as any" :aria-label="t('tasks.form.maxPrice')" :placeholder="t('tasks.form.maxPrice')" />
         </div>
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="max-pages" class="text-right">{{ t('tasks.form.maxPages') }}</Label>
-        <Input id="max-pages" v-model.number="form.max_pages" type="number" class="col-span-3" />
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label for="max-pages" class="sm:text-right">{{ t('tasks.form.maxPages') }}</Label>
+        <Input id="max-pages" v-model.number="form.max_pages" type="number" class="sm:col-span-3" />
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="cron" class="text-right">{{ t('tasks.form.schedule') }}</Label>
-        <div class="col-span-3 space-y-2">
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label for="cron" class="sm:text-right">{{ t('tasks.form.schedule') }}</Label>
+        <div class="space-y-2 sm:col-span-3">
           <Tabs v-model="cronMode" class="w-full">
             <TabsList class="grid w-full grid-cols-2">
               <TabsTrigger value="preset">{{ t('tasks.form.cronPresetTab') }}</TabsTrigger>
@@ -367,9 +367,9 @@ function handleSubmit() {
           </Tabs>
         </div>
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{{ t('tasks.form.accountStrategyLabel') }}</Label>
-        <div class="col-span-3 space-y-2">
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label class="sm:text-right">{{ t('tasks.form.accountStrategyLabel') }}</Label>
+        <div class="space-y-2 sm:col-span-3">
           <select
             :value="accountStrategy"
             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -384,9 +384,9 @@ function handleSubmit() {
           </p>
         </div>
       </div>
-      <div v-if="accountStrategy === 'fixed'" class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{{ t('tasks.form.fixedAccount') }}</Label>
-        <div class="col-span-3">
+      <div v-if="accountStrategy === 'fixed'" class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label class="sm:text-right">{{ t('tasks.form.fixedAccount') }}</Label>
+        <div class="sm:col-span-3">
           <select
             :value="selectedAccountStateFile"
             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -399,17 +399,21 @@ function handleSubmit() {
           </select>
         </div>
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label for="personal-only" class="text-right">{{ t('tasks.form.personalOnly') }}</Label>
-        <Switch id="personal-only" v-model="form.personal_only" />
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label for="personal-only" class="sm:text-right">{{ t('tasks.form.personalOnly') }}</Label>
+        <div class="sm:col-span-3">
+          <Switch id="personal-only" v-model="form.personal_only" />
+        </div>
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{{ t('tasks.form.freeShipping') }}</Label>
-        <Switch v-model="form.free_shipping" />
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label for="free-shipping" class="sm:text-right">{{ t('tasks.form.freeShipping') }}</Label>
+        <div class="sm:col-span-3">
+          <Switch id="free-shipping" v-model="form.free_shipping" />
+        </div>
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{{ t('tasks.form.newPublish') }}</Label>
-        <div class="col-span-3">
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label class="sm:text-right">{{ t('tasks.form.newPublish') }}</Label>
+        <div class="sm:col-span-3">
           <Select v-model="form.new_publish_option as any">
             <SelectTrigger>
               <SelectValue :placeholder="t('tasks.form.publishOptions.none')" />
@@ -425,9 +429,9 @@ function handleSubmit() {
           </Select>
         </div>
       </div>
-      <div class="grid grid-cols-4 items-center gap-4">
-        <Label class="text-right">{{ t('tasks.form.region') }}</Label>
-        <div class="col-span-3 space-y-1">
+      <div class="grid gap-2 sm:grid-cols-4 sm:items-center sm:gap-4">
+        <Label class="sm:text-right">{{ t('tasks.form.region') }}</Label>
+        <div class="space-y-1 sm:col-span-3">
           <TaskRegionSelector v-model="form.region as any" />
           <p class="text-xs text-gray-500">{{ t('tasks.form.regionHint') }}</p>
         </div>

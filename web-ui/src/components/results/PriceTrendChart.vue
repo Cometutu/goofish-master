@@ -71,31 +71,31 @@ const areaPath = computed(() => {
 </script>
 
 <template>
-  <div class="rounded-[28px] border border-[#d6d1c8] bg-[#f8f3e9] p-4 shadow-[0_16px_40px_rgba(77,59,34,0.08)]">
-    <div class="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.28em] text-[#8d7258]">
+  <div class="app-surface-subtle p-4">
+    <div class="mb-3 flex flex-col gap-3 text-xs uppercase tracking-[0.22em] text-slate-500 sm:flex-row sm:items-center sm:justify-between">
       <span>Daily Price Curve</span>
       <div class="flex items-center gap-3">
         <span class="inline-flex items-center gap-1">
-          <span class="h-2.5 w-2.5 rounded-full bg-[#1f6f78]" />
+          <span class="h-2.5 w-2.5 rounded-full bg-sky-600" />
           {{ t('results.chart.avgPrice') }}
         </span>
         <span class="inline-flex items-center gap-1">
-          <span class="h-2.5 w-2.5 rounded-full bg-[#c1683c]" />
+          <span class="h-2.5 w-2.5 rounded-full bg-amber-500" />
           {{ t('results.chart.medianPrice') }}
         </span>
       </div>
     </div>
 
-    <div v-if="validPoints.length === 0" class="rounded-2xl border border-dashed border-[#d0c3af] bg-white/70 px-4 py-10 text-center text-sm text-[#8a7660]">
+    <div v-if="validPoints.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-10 text-center text-sm text-slate-500">
       {{ t('results.chart.noTrend') }}
     </div>
 
     <div v-else>
-      <svg :viewBox="`0 0 ${chartWidth} ${chartHeight}`" class="h-[220px] w-full">
+      <svg :viewBox="`0 0 ${chartWidth} ${chartHeight}`" class="h-[220px] w-full" role="img" :aria-label="t('results.chart.noTrend')">
         <defs>
           <linearGradient id="avg-area-fill" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#1f6f78" stop-opacity="0.28" />
-            <stop offset="100%" stop-color="#1f6f78" stop-opacity="0" />
+            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.24" />
+            <stop offset="100%" stop-color="#0284c7" stop-opacity="0" />
           </linearGradient>
         </defs>
 
@@ -107,23 +107,23 @@ const areaPath = computed(() => {
             :x2="chartWidth - padding"
             :y1="padding + ((chartHeight - padding * 2) / 4) * (index - 1)"
             :y2="padding + ((chartHeight - padding * 2) / 4) * (index - 1)"
-            stroke="#dbcdb8"
+            stroke="#cbd5e1"
             stroke-dasharray="4 6"
           />
         </g>
 
         <path :d="areaPath" fill="url(#avg-area-fill)" />
-        <path :d="avgPath" fill="none" stroke="#1f6f78" stroke-width="4" stroke-linecap="round" />
-        <path :d="medianPath" fill="none" stroke="#c1683c" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round" />
+        <path :d="avgPath" fill="none" stroke="#0284c7" stroke-width="4" stroke-linecap="round" />
+        <path :d="medianPath" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round" />
 
         <g v-for="(point, index) in validPoints" :key="point.day">
-          <circle :cx="resolveX(index)" :cy="resolveY(point.avg_price as number)" r="5" fill="#1f6f78" />
-          <circle :cx="resolveX(index)" :cy="resolveY(point.median_price as number)" r="4" fill="#c1683c" />
+          <circle :cx="resolveX(index)" :cy="resolveY(point.avg_price as number)" r="5" fill="#0284c7" />
+          <circle :cx="resolveX(index)" :cy="resolveY(point.median_price as number)" r="4" fill="#f59e0b" />
           <text
             :x="resolveX(index)"
             :y="chartHeight - 6"
             text-anchor="middle"
-            fill="#8d7258"
+            fill="#64748b"
             font-size="12"
           >
             {{ point.day.slice(5) }}

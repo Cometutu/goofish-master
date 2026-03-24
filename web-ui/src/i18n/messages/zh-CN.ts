@@ -21,6 +21,9 @@ const zhCN = {
   common: {
     cancel: '取消',
     close: '关闭',
+    delete: '删除',
+    edit: '编辑',
+    skipToContent: '跳转到主内容',
     save: '保存',
     saving: '保存中...',
     refresh: '刷新',
@@ -55,6 +58,11 @@ const zhCN = {
     countdownSeconds: '{seconds}秒',
   },
   header: {
+    goHome: '返回首页',
+    openAccounts: '打开账号管理',
+    openNavigation: '打开导航菜单',
+    openNotifications: '打开通知设置',
+    openPrompts: '打开 Prompt 管理',
     searchUnavailable: '任务搜索仅在监控概览页可用...',
     accountManagement: '账号管理',
   },

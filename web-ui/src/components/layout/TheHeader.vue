@@ -40,7 +40,11 @@ function goPrompts() {
 <template>
   <header class="flex items-center justify-between px-6 h-16 bg-white/60 backdrop-blur-md border-b border-slate-200/60 sticky top-0 z-[100]">
     <!-- Brand Logo -->
-    <div class="flex items-center gap-2 group cursor-pointer" @click="router.push('/')">
+    <RouterLink
+      to="/dashboard"
+      class="flex items-center gap-2 group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      :aria-label="t('header.goHome')"
+    >
       <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:rotate-12">
         <Zap class="w-5 h-5 text-white fill-white" />
       </div>
@@ -50,7 +54,7 @@ function goPrompts() {
       <Badge variant="outline" class="ml-2 text-[10px] font-bold border-primary/20 text-primary bg-primary/5 uppercase tracking-widest hidden sm:flex">
         PRO
       </Badge>
-    </div>
+    </RouterLink>
 
     <!-- Search & Navigation -->
     <div class="hidden md:flex flex-grow max-w-md mx-8">
@@ -60,6 +64,8 @@ function goPrompts() {
         <input 
           type="text" 
           v-model="inactiveSearchValue"
+          readonly
+          aria-disabled="true"
           :placeholder="t('header.searchUnavailable')"
           class="w-full h-10 pl-10 pr-4 bg-slate-100/50 border border-slate-200/50 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary/50"
         />
@@ -76,10 +82,22 @@ function goPrompts() {
       </div>
 
       <div class="flex items-center gap-1 sm:gap-2">
-         <Button variant="ghost" size="icon" class="rounded-full text-slate-500 hover:text-primary hover:bg-primary/10" @click="goNotifications">
+         <Button
+           variant="ghost"
+           size="icon"
+           class="rounded-full text-slate-500 hover:text-primary hover:bg-primary/10"
+           :aria-label="t('header.openNotifications')"
+           @click="goNotifications"
+         >
             <Bell class="w-5 h-5" />
          </Button>
-         <Button variant="ghost" size="icon" class="rounded-full text-slate-500 hover:text-primary hover:bg-primary/10" @click="goPrompts">
+         <Button
+           variant="ghost"
+           size="icon"
+           class="rounded-full text-slate-500 hover:text-primary hover:bg-primary/10"
+           :aria-label="t('header.openPrompts')"
+           @click="goPrompts"
+         >
             <HelpCircle class="w-5 h-5" />
          </Button>
       </div>
@@ -89,6 +107,7 @@ function goPrompts() {
       <Button 
         variant="ghost" 
         class="hidden sm:flex items-center gap-2 pl-2 pr-4 rounded-full hover:bg-slate-100 transition-all active:scale-95"
+        :aria-label="t('header.openAccounts')"
         @click="goAccounts"
       >
         <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300 shadow-sm">
@@ -100,7 +119,13 @@ function goPrompts() {
         </div>
       </Button>
 
-      <Button variant="ghost" size="icon" class="md:hidden" @click="toggleMobileNav">
+      <Button
+        variant="ghost"
+        size="icon"
+        class="md:hidden"
+        :aria-label="t('header.openNavigation')"
+        @click="toggleMobileNav"
+      >
          <Menu class="w-6 h-6 text-slate-700" />
       </Button>
     </div>

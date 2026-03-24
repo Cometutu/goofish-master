@@ -60,9 +60,15 @@ const expanded = ref(false)
         </Badge>
       </div>
       <div class="absolute top-3 right-3">
-         <div class="p-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+         <a
+           :href="info.商品链接"
+           target="_blank"
+           rel="noopener noreferrer"
+           :aria-label="t('results.card.detail')"
+           class="flex rounded-full bg-white/30 p-1.5 text-white backdrop-blur-md border border-white/40 shadow-sm opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+         >
             <ExternalLink class="w-4 h-4" />
-         </div>
+         </a>
       </div>
     </div>
 
@@ -106,7 +112,8 @@ const expanded = ref(false)
            {{ ai?.reason || t('results.card.analyzing') }}
         </p>
         
-        <button 
+        <button
+          type="button"
           v-if="ai?.reason && ai.reason.length > 50"
           @click="expanded = !expanded" 
           class="mt-1 text-[10px] font-bold uppercase text-primary/70 hover:text-primary transition-colors flex items-center gap-1"
@@ -148,7 +155,7 @@ const expanded = ref(false)
           <span>{{ crawlTime }}</span>
         </div>
       </div>
-      <a :href="info.商品链接" target="_blank" class="flex items-center gap-1 text-primary font-bold hover:gap-1.5 transition-all">
+      <a :href="info.商品链接" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-primary font-bold hover:gap-1.5 transition-all">
         {{ t('results.card.detail') }} <ExternalLink class="w-3 h-3" />
       </a>
     </CardFooter>

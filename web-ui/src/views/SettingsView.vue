@@ -182,17 +182,17 @@ watch(selectedPrompt, async (value) => {
   <div>
     <h1 class="text-2xl font-bold text-gray-800 mb-6">{{ t('settings.title') }}</h1>
     
-    <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+    <div v-if="error" class="app-alert-error mb-4" role="alert">
       {{ error.message }}
     </div>
 
     <Tabs v-model="activeTab" class="w-full">
-      <TabsList class="mb-4">
-        <TabsTrigger value="ai">{{ t('settings.tabs.ai') }}</TabsTrigger>
-        <TabsTrigger value="rotation">{{ t('settings.tabs.rotation') }}</TabsTrigger>
-        <TabsTrigger value="notifications">{{ t('settings.tabs.notifications') }}</TabsTrigger>
-        <TabsTrigger value="status">{{ t('settings.tabs.status') }}</TabsTrigger>
-        <TabsTrigger value="prompts">{{ t('settings.tabs.prompts') }}</TabsTrigger>
+      <TabsList class="mb-4 flex w-full flex-nowrap justify-start gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
+        <TabsTrigger class="shrink-0" value="ai">{{ t('settings.tabs.ai') }}</TabsTrigger>
+        <TabsTrigger class="shrink-0" value="rotation">{{ t('settings.tabs.rotation') }}</TabsTrigger>
+        <TabsTrigger class="shrink-0" value="notifications">{{ t('settings.tabs.notifications') }}</TabsTrigger>
+        <TabsTrigger class="shrink-0" value="status">{{ t('settings.tabs.status') }}</TabsTrigger>
+        <TabsTrigger class="shrink-0" value="prompts">{{ t('settings.tabs.prompts') }}</TabsTrigger>
       </TabsList>
 
       <!-- AI Tab -->

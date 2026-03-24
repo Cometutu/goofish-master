@@ -261,7 +261,7 @@ onMounted(fetchAccountOptions)
       </DialogContent>
     </Dialog>
 
-    <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <div v-if="error" class="app-alert-error mb-4" role="alert">
       <strong class="font-bold">{{ t('common.error') }}</strong>
       <span class="block sm:inline">{{ error.message }}</span>
     </div>
