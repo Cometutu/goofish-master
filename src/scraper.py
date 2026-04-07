@@ -61,6 +61,22 @@ from src.services.search_pagination import (
     advance_search_page,
     is_search_results_response,
 )
+from src.domain.models.task import HotnessConfig
+from src.services.hotness_watchlist_service import (
+    add_to_watchlist as watchlist_add_item,
+    load_watching_items,
+    update_watchlist_check,
+    mark_watchlist_status,
+)
+from src.services.hotness_evaluator import (
+    HotnessRates,
+    calc_hotness_rates,
+    calc_minutes_since_publish,
+    evaluate_hotness,
+    format_hotness_reason,
+    is_watch_expired,
+    _safe_number,
+)
 
 
 class RiskControlError(Exception):
@@ -442,6 +458,158 @@ async def scrape_user_profile(context, user_id: str) -> dict:
     return profile_data
 
 
+async def _run_hotness_recheck(
+    *,
+    context,
+    keyword: str,
+    task_config: dict,
+    hotness_config: HotnessConfig,
+    analysis_dispatcher: Optional["ItemAnalysisDispatcher"],
+) -> None:
+    """
+    热度模式巡检阶段：从 watchlist 中取出待检商品，
+    重新访问详情页获取最新指标，重新计算速率并判断是否达标。
+    """
+    max_recheck = hotness_config.max_recheck_per_run or 10
+    try:
+        watching_items = await load_watching_items(keyword, limit=max_recheck)
+    except Exception as exc:
+        print(f"[热度巡检] 加载监测列表失败: {exc}")
+        return
+
+    if not watching_items:
+        log_time("[热度巡检] 没有需要巡检的商品。")
+        return
+
+    log_time(f"[热度巡检] 开始巡检 {len(watching_items)} 个监测中商品...")
+
+    for wi in watching_items:
+        # 先检查是否已过期
+        if is_watch_expired(
+            first_crawl_time=wi.first_crawl_time,
+            check_count=wi.check_count,
+            config=hotness_config,
+        ):
+            await mark_watchlist_status(wi.id, "expired")
+            log_time(f"[热度巡检] 商品 '{str(wi.title or '')[:20]}...' 已达到监测上限，标记为过期。")
+            continue
+
+        # 访问详情页获取最新指标
+        detail_page = await context.new_page()
+        try:
+            async with detail_page.expect_response(
+                lambda r: DETAIL_API_URL_PATTERN in r.url, timeout=25000
+            ) as detail_info:
+                await detail_page.goto(
+                    wi.link,
+                    wait_until="domcontentloaded",
+                    timeout=25000,
+                )
+
+            detail_response = await detail_info.value
+            if not detail_response.ok:
+                log_time(f"[热度巡检] 获取商品详情失败，状态码: {detail_response.status}")
+                continue
+
+            detail_json = await detail_response.json()
+            ret_string = str(await safe_get(detail_json, "ret", default=[]))
+            if "FAIL_SYS_USER_VALIDATE" in ret_string:
+                log_time("[热度巡检] 检测到风控验证，终止巡检。")
+                break
+
+            item_do = await safe_get(detail_json, "data", "itemDO", default={})
+            new_want_cnt = _safe_number(await safe_get(item_do, "wantCnt", default=0))
+            new_browse_cnt = _safe_number(await safe_get(item_do, "browseCnt", default=0))
+            new_collect_cnt = _safe_number(await safe_get(item_do, "collectCnt", default=0))
+
+            # 更新巡检记录
+            await update_watchlist_check(
+                wi.id,
+                want_cnt=new_want_cnt,
+                browse_cnt=new_browse_cnt,
+                collect_cnt=new_collect_cnt,
+            )
+
+            # 计算热度速率
+            publish_ts = wi.publish_timestamp
+            minutes = calc_minutes_since_publish(
+                wi.publish_time,
+                wi.first_crawl_time,
+                publish_timestamp_ms=publish_ts,
+            )
+            rates = calc_hotness_rates(
+                want_cnt=new_want_cnt,
+                browse_cnt=new_browse_cnt,
+                collect_cnt=new_collect_cnt,
+                minutes_since_publish=minutes,
+            )
+            is_hot = evaluate_hotness(rates, hotness_config)
+
+            if is_hot:
+                await mark_watchlist_status(wi.id, "triggered")
+                reason = format_hotness_reason(rates)
+                log_time(f"[热度巡检] 🔥 商品 '{str(wi.title or '')[:20]}...' 热度达标！")
+
+                # 构建通知记录
+                item_data = {}
+                if wi.raw_item_json:
+                    try:
+                        item_data = json.loads(wi.raw_item_json)
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                # 更新最新指标
+                item_data["\u201c想要\u201d人数"] = new_want_cnt
+                item_data["浏览量"] = new_browse_cnt
+                item_data["收藏数"] = new_collect_cnt
+
+                try:
+                    await send_ntfy_notification(item_data, reason)
+                except Exception as exc:
+                    print(f"   [热度巡检] 发送通知失败: {exc}")
+
+                # 保存巡检达标记录到结果集
+                recheck_record = {
+                    "爬取时间": datetime.now().isoformat(),
+                    "搜索关键字": keyword,
+                    "任务名称": task_config.get("task_name", "Untitled Task"),
+                    "商品信息": item_data,
+                    "卖家信息": {},
+                    "ai_analysis": {
+                        "analysis_source": "hotness",
+                        "is_recommended": True,
+                        "reason": reason,
+                        "keyword_hit_count": 0,
+                        "hotness_rates": {
+                            "collect_per_minute": rates.collect_per_minute,
+                            "want_per_minute": rates.want_per_minute,
+                            "browse_per_minute": rates.browse_per_minute,
+                            "minutes_since_publish": rates.minutes_since_publish,
+                        },
+                    },
+                }
+                try:
+                    await save_to_jsonl(recheck_record, keyword)
+                except Exception as exc:
+                    print(f"   [热度巡检] 保存巡检结果失败: {exc}")
+            else:
+                log_time(
+                    f"[热度巡检] 商品 '{str(wi.title or '')[:20]}...' 仍未达标 "
+                    f"(收藏 {rates.collect_per_minute:.3f}/分, "
+                    f"想要 {rates.want_per_minute:.3f}/分, "
+                    f"浏览 {rates.browse_per_minute:.2f}/分)"
+                )
+
+        except PlaywrightTimeoutError:
+            log_time(f"[热度巡检] 访问商品详情超时，跳过: {wi.link}")
+        except Exception as exc:
+            log_time(f"[热度巡检] 巡检商品时出错: {exc}")
+        finally:
+            await detail_page.close()
+            await random_sleep(3, 6)
+
+    log_time("[热度巡检] 巡检阶段完成。")
+
+
 async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
     """
     【核心执行器】
@@ -455,9 +623,19 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
     ai_prompt_text = task_config.get("ai_prompt_text", "")
     analyze_images = _should_analyze_images(task_config)
     decision_mode = str(task_config.get("decision_mode", "ai")).strip().lower()
-    if decision_mode not in {"ai", "keyword"}:
+    if decision_mode not in {"ai", "keyword", "hotness"}:
         decision_mode = "ai"
     keyword_rules = task_config.get("keyword_rules") or []
+
+    # 解析热度模式配置
+    hotness_config: Optional[HotnessConfig] = None
+    if decision_mode == "hotness":
+        raw_hotness = task_config.get("hotness_config") or {}
+        if isinstance(raw_hotness, dict) and raw_hotness:
+            hotness_config = HotnessConfig(**raw_hotness)
+        elif isinstance(raw_hotness, HotnessConfig):
+            hotness_config = raw_hotness
+
     free_shipping = task_config.get("free_shipping", False)
     raw_new_publish = task_config.get("new_publish_option") or ""
     new_publish_option = raw_new_publish.strip()
@@ -605,6 +783,7 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
                 ai_analyzer=get_ai_analysis,
                 notifier=send_ntfy_notification,
                 saver=save_to_jsonl,
+                watchlist_adder=watchlist_add_item if decision_mode == "hotness" else None,
             )
 
             # 增强反检测脚本（模拟真实移动设备）
@@ -1058,6 +1237,9 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
                                 item_data["浏览量"] = await safe_get(
                                     item_do, "browseCnt", default="-"
                                 )
+                                item_data["收藏数"] = await safe_get(
+                                    item_do, "collectCnt", default=0
+                                )
                                 # ...[此处可添加更多从详情页解析出的商品信息]...
 
                                 user_id = await safe_get(seller_do, "sellerId")
@@ -1097,6 +1279,7 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
                                         seller_id=str(user_id) if user_id else None,
                                         zhima_credit_text=zhima_credit_text,
                                         registration_duration_text=registration_duration_text,
+                                        hotness_config=hotness_config,
                                     )
                                 )
 
@@ -1167,6 +1350,17 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
                 if analysis_dispatcher is not None:
                     log_time("等待后台分析任务完成...")
                     await analysis_dispatcher.join()
+
+                # ─── 热度模式巡检阶段：复检 watchlist 中的商品 ───
+                if decision_mode == "hotness" and hotness_config is not None:
+                    await _run_hotness_recheck(
+                        context=context,
+                        keyword=keyword,
+                        task_config=task_config,
+                        hotness_config=hotness_config,
+                        analysis_dispatcher=analysis_dispatcher,
+                    )
+
                 log_time("任务执行完毕，浏览器将在5秒后自动关闭...")
                 await asyncio.sleep(5)
                 if debug_limit:

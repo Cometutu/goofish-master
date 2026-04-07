@@ -54,6 +54,7 @@ const statCards = computed(() => [
     detail: t('dashboard.stats.recommendedBreakdown', {
       ai: stats.value.aiRecommendedItems,
       keyword: stats.value.keywordRecommendedItems,
+      hotness: stats.value.hotnessRecommendedItems || 0,
     }),
     icon: Target,
     color: 'text-amber-500',

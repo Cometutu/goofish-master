@@ -30,6 +30,7 @@ def _build_summary_metrics(tasks: list[Task], summary_list: list[dict[str, Any]]
         "recommended_items": sum(int(item["recommended_items"]) for item in summary_list),
         "ai_recommended_items": sum(int(item["ai_recommended_items"]) for item in summary_list),
         "keyword_recommended_items": sum(int(item["keyword_recommended_items"]) for item in summary_list),
+        "hotness_recommended_items": sum(int(item.get("hotness_recommended_items", 0)) for item in summary_list),
         "last_updated_at": serialize_timestamp(last_updated_at),
     }
 

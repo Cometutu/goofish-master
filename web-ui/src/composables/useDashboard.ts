@@ -80,6 +80,7 @@ export function useDashboard() {
       recommendedItems: summary?.recommended_items || 0,
       aiRecommendedItems: summary?.ai_recommended_items || 0,
       keywordRecommendedItems: summary?.keyword_recommended_items || 0,
+      hotnessRecommendedItems: summary?.hotness_recommended_items || 0,
       resultFiles: summary?.result_files || 0,
     }
   })

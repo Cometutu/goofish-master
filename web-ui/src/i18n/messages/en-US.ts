@@ -93,7 +93,7 @@ const enUS = {
       monitoredTasks: 'Monitored Tasks',
       runningCount: '{count} running',
       resultFiles: '{count} result files',
-      recommendedBreakdown: 'AI {ai} / Keyword {keyword}',
+      recommendedBreakdown: 'AI {ai} / Keyword {keyword} / Hotness {hotness}',
       showAllTasks: 'Showing all tasks',
     },
     focus: {
@@ -141,6 +141,7 @@ const enUS = {
       asc: 'Ascending',
       aiOnly: 'AI recommendations only',
       keywordOnly: 'Keyword recommendations only',
+      hotnessOnly: 'Hotness recommendations only',
       exportCsv: 'Export CSV',
       deleteResult: 'Delete Result',
       noResultToDelete: 'No result file to delete.',

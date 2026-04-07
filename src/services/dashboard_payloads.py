@@ -49,6 +49,7 @@ def build_empty_summary(task: Task) -> dict[str, Any]:
         "recommended_items": 0,
         "ai_recommended_items": 0,
         "keyword_recommended_items": 0,
+        "hotness_recommended_items": 0,
         "latest_crawl_time": None,
         "latest_recommended_title": None,
         "latest_recommended_price": None,
@@ -105,6 +106,7 @@ def _build_fallback_summary(task_name: str, keyword: str) -> dict[str, Any]:
         "recommended_items": 0,
         "ai_recommended_items": 0,
         "keyword_recommended_items": 0,
+        "hotness_recommended_items": 0,
         "latest_crawl_time": None,
         "latest_recommended_title": None,
         "latest_recommended_price": None,
@@ -133,6 +135,7 @@ def _collect_record_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     recommended_items = 0
     ai_recommended_items = 0
     keyword_recommended_items = 0
+    hotness_recommended_items = 0
 
     for record in records:
         crawl_time = parse_timestamp(record.get("爬取时间"))
@@ -150,6 +153,8 @@ def _collect_record_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
             ai_recommended_items += 1
         elif source == "keyword":
             keyword_recommended_items += 1
+        elif source == "hotness":
+            hotness_recommended_items += 1
 
         recommendation_time = parse_timestamp(
             latest_recommendation.get("爬取时间") if latest_recommendation else None
@@ -166,6 +171,7 @@ def _collect_record_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
         "recommended_items": recommended_items,
         "ai_recommended_items": ai_recommended_items,
         "keyword_recommended_items": keyword_recommended_items,
+        "hotness_recommended_items": hotness_recommended_items,
     }
 
 
@@ -183,7 +189,7 @@ def _build_recommendation_activity(
     analysis = latest_recommendation.get("ai_analysis", {}) or {}
     title = str(product.get("商品标题") or "发现推荐商品")
     price = parse_price_value(product.get("当前售价"))
-    status = "AI 推荐" if analysis.get("analysis_source") == "ai" else "关键词命中"
+    status = "AI 推荐" if analysis.get("analysis_source") == "ai" else ("热度达标" if analysis.get("analysis_source") == "hotness" else "关键词命中")
     detail = f"当前价 ¥{price:.0f}" if isinstance(price, (int, float)) else None
     activity = build_activity(
         activity_id=f"{filename}:recommended",
@@ -266,6 +272,7 @@ async def summarize_result_file(
             "recommended_items": metrics["recommended_items"],
             "ai_recommended_items": metrics["ai_recommended_items"],
             "keyword_recommended_items": metrics["keyword_recommended_items"],
+            "hotness_recommended_items": metrics.get("hotness_recommended_items", 0),
             "latest_crawl_time": serialize_timestamp(latest_crawl_time),
             "latest_recommended_title": title,
             "latest_recommended_price": price,

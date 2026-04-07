@@ -34,6 +34,15 @@ const accountStrategy = ref<'auto' | 'fixed' | 'rotate'>('auto')
 const selectedAccountStateFile = ref(AUTO_ACCOUNT_VALUE)
 const keywordRulesInput = ref('')
 const cronMode = ref<'preset' | 'custom'>('preset')
+const hotnessForm = ref({
+  collect_per_minute: undefined as number | undefined,
+  want_per_minute: undefined as number | undefined,
+  browse_per_minute: undefined as number | undefined,
+  condition_logic: 'or' as 'or' | 'and',
+  max_monitor_hours: undefined as number | undefined,
+  max_check_count: undefined as number | undefined,
+  max_recheck_per_run: 10,
+})
 
 // 常用 cron 预设选项
 const cronPresets = computed(() => [
@@ -115,6 +124,21 @@ watch(() => [props.mode, props.initialData, props.defaultValues, props.defaultAc
       decision_mode: defaultValues.decision_mode || props.initialData.decision_mode || 'ai',
     }
     keywordRulesInput.value = (defaultValues.keyword_rules || props.initialData.keyword_rules || []).join('\n')
+    // 初始化热度配置
+    const hc = defaultValues.hotness_config || props.initialData.hotness_config || null
+    if (hc) {
+      hotnessForm.value = {
+        collect_per_minute: hc.collect_per_minute ?? undefined,
+        want_per_minute: hc.want_per_minute ?? undefined,
+        browse_per_minute: hc.browse_per_minute ?? undefined,
+        condition_logic: hc.condition_logic || 'or',
+        max_monitor_hours: hc.max_monitor_hours ?? undefined,
+        max_check_count: hc.max_check_count ?? undefined,
+        max_recheck_per_run: hc.max_recheck_per_run ?? 10,
+      }
+    } else {
+      hotnessForm.value = { collect_per_minute: undefined, want_per_minute: undefined, browse_per_minute: undefined, condition_logic: 'or', max_monitor_hours: undefined, max_check_count: undefined, max_recheck_per_run: 10 }
+    }
     // 编辑模式下，根据 cron 值判断模式
     const cronVal = defaultValues.cron ?? props.initialData.cron ?? ''
     cronMode.value = isPresetCronValue(cronVal) ? 'preset' : 'custom'
@@ -149,6 +173,21 @@ watch(() => [props.mode, props.initialData, props.defaultValues, props.defaultAc
     keywordRulesInput.value = ''
     if (defaultValues.keyword_rules && defaultValues.keyword_rules.length > 0) {
       keywordRulesInput.value = defaultValues.keyword_rules.join('\n')
+    }
+    // 创建模式下初始化热度配置
+    const hcDefault = defaultValues.hotness_config || null
+    if (hcDefault) {
+      hotnessForm.value = {
+        collect_per_minute: hcDefault.collect_per_minute ?? undefined,
+        want_per_minute: hcDefault.want_per_minute ?? undefined,
+        browse_per_minute: hcDefault.browse_per_minute ?? undefined,
+        condition_logic: hcDefault.condition_logic || 'or',
+        max_monitor_hours: hcDefault.max_monitor_hours ?? undefined,
+        max_check_count: hcDefault.max_check_count ?? undefined,
+        max_recheck_per_run: hcDefault.max_recheck_per_run ?? 10,
+      }
+    } else {
+      hotnessForm.value = { collect_per_minute: undefined, want_per_minute: undefined, browse_per_minute: undefined, condition_logic: 'or', max_monitor_hours: undefined, max_check_count: undefined, max_recheck_per_run: 10 }
     }
     // 创建模式下，根据默认值判断模式
     const cronVal = defaultValues.cron ?? ''
@@ -213,6 +252,18 @@ function handleSubmit() {
     return
   }
 
+  if (decisionMode === 'hotness') {
+    const hf = hotnessForm.value
+    if (hf.collect_per_minute == null && hf.want_per_minute == null && hf.browse_per_minute == null) {
+      toast({
+        title: t('tasks.form.validation.incomplete'),
+        description: t('tasks.form.validation.hotnessThresholdRequired'),
+        variant: 'destructive',
+      })
+      return
+    }
+  }
+
   // Filter out fields that shouldn't be sent in update requests
   const { id, is_running, next_run_at, ...submitData } = form.value as any
   const currentAccountStrategy = accountStrategy.value || 'auto'
@@ -252,6 +303,23 @@ function handleSubmit() {
   if (decisionMode === 'keyword' && !submitData.description) {
     submitData.description = ''
   }
+  if (decisionMode === 'hotness') {
+    const hf = hotnessForm.value
+    submitData.hotness_config = {
+      collect_per_minute: hf.collect_per_minute || null,
+      want_per_minute: hf.want_per_minute || null,
+      browse_per_minute: hf.browse_per_minute || null,
+      condition_logic: hf.condition_logic || 'or',
+      max_monitor_hours: hf.max_monitor_hours || null,
+      max_check_count: hf.max_check_count || null,
+      max_recheck_per_run: hf.max_recheck_per_run || 10,
+    }
+    if (!submitData.description) {
+      submitData.description = ''
+    }
+  } else {
+    submitData.hotness_config = null
+  }
 
   emit('submit', submitData)
 }
@@ -278,6 +346,7 @@ function handleSubmit() {
             <SelectContent>
               <SelectItem value="ai">{{ t('tasks.form.aiMode') }}</SelectItem>
               <SelectItem value="keyword">{{ t('tasks.form.keywordMode') }}</SelectItem>
+              <SelectItem value="hotness">{{ t('tasks.form.hotnessMode') }}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -292,6 +361,9 @@ function handleSubmit() {
           />
           <p v-if="form.decision_mode === 'keyword'" class="text-xs text-gray-500">
             {{ t('tasks.form.keywordDescriptionHint') }}
+          </p>
+          <p v-if="form.decision_mode === 'hotness'" class="text-xs text-gray-500">
+            {{ t('tasks.form.hotnessDescriptionHint') }}
           </p>
         </div>
       </div>
@@ -316,6 +388,58 @@ function handleSubmit() {
             class="min-h-[120px]"
             :placeholder="t('tasks.form.keywordRulesPlaceholder')"
           />
+        </div>
+      </div>
+
+      <!-- Hotness Mode Configuration -->
+      <div v-if="form.decision_mode === 'hotness'" class="grid grid-cols-4 gap-4">
+        <Label class="text-right pt-2">{{ t('tasks.form.hotnessConfig') }}</Label>
+        <div class="col-span-3 space-y-4 rounded-lg border border-orange-200/50 bg-orange-50/30 p-4">
+          <p class="text-xs text-gray-500">
+            {{ t('tasks.form.hotnessConfigHint') }}
+          </p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="space-y-1">
+              <Label class="text-xs text-gray-600">{{ t('tasks.form.hotnessCollect') }}</Label>
+              <Input type="number" step="0.001" v-model.number="hotnessForm.collect_per_minute" :placeholder="t('tasks.form.hotnessThresholdPlaceholder')" />
+            </div>
+            <div class="space-y-1">
+              <Label class="text-xs text-gray-600">{{ t('tasks.form.hotnessWant') }}</Label>
+              <Input type="number" step="0.001" v-model.number="hotnessForm.want_per_minute" :placeholder="t('tasks.form.hotnessThresholdPlaceholder')" />
+            </div>
+            <div class="space-y-1">
+              <Label class="text-xs text-gray-600">{{ t('tasks.form.hotnessBrowse') }}</Label>
+              <Input type="number" step="0.01" v-model.number="hotnessForm.browse_per_minute" :placeholder="t('tasks.form.hotnessThresholdPlaceholder')" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <Label class="text-xs text-gray-600">{{ t('tasks.form.hotnessConditionLogic') }}</Label>
+              <Select v-model="hotnessForm.condition_logic">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="or">{{ t('tasks.form.hotnessLogicOr') }}</SelectItem>
+                  <SelectItem value="and">{{ t('tasks.form.hotnessLogicAnd') }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="space-y-1">
+              <Label class="text-xs text-gray-600">{{ t('tasks.form.hotnessMaxRecheckPerRun') }}</Label>
+              <Input type="number" v-model.number="hotnessForm.max_recheck_per_run" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <Label class="text-xs text-gray-600">{{ t('tasks.form.hotnessMaxMonitorHours') }}</Label>
+              <Input type="number" step="0.5" v-model.number="hotnessForm.max_monitor_hours" :placeholder="t('tasks.form.hotnessOptionalPlaceholder')" />
+            </div>
+            <div class="space-y-1">
+              <Label class="text-xs text-gray-600">{{ t('tasks.form.hotnessMaxCheckCount') }}</Label>
+              <Input type="number" v-model.number="hotnessForm.max_check_count" :placeholder="t('tasks.form.hotnessOptionalPlaceholder')" />
+            </div>
+          </div>
         </div>
       </div>
 

@@ -44,6 +44,7 @@ def _build_query_conditions(
     filename: str,
     ai_recommended_only: bool,
     keyword_recommended_only: bool,
+    hotness_recommended_only: bool = False,
 ) -> tuple[str, list]:
     conditions = ["result_filename = ?"]
     params: list = [filename]
@@ -55,6 +56,10 @@ def _build_query_conditions(
         conditions.append("is_recommended = 1")
         conditions.append("analysis_source = ?")
         params.append("keyword")
+    if hotness_recommended_only:
+        conditions.append("is_recommended = 1")
+        conditions.append("analysis_source = ?")
+        params.append("hotness")
     return " AND ".join(conditions), params
 
 
@@ -175,6 +180,7 @@ async def query_result_records(
     *,
     ai_recommended_only: bool,
     keyword_recommended_only: bool,
+    hotness_recommended_only: bool = False,
     sort_by: str,
     sort_order: str,
     page: int,
@@ -185,6 +191,7 @@ async def query_result_records(
         filename,
         ai_recommended_only,
         keyword_recommended_only,
+        hotness_recommended_only,
         sort_by,
         sort_order,
         page,
@@ -196,6 +203,7 @@ def _query_result_records_sync(
     filename: str,
     ai_recommended_only: bool,
     keyword_recommended_only: bool,
+    hotness_recommended_only: bool,
     sort_by: str,
     sort_order: str,
     page: int,
@@ -206,6 +214,7 @@ def _query_result_records_sync(
         filename=filename,
         ai_recommended_only=ai_recommended_only,
         keyword_recommended_only=keyword_recommended_only,
+        hotness_recommended_only=hotness_recommended_only,
     )
     offset = max(page - 1, 0) * limit
     order_clause = _sort_expression(sort_by, sort_order)
@@ -233,6 +242,7 @@ async def load_all_result_records(
     *,
     ai_recommended_only: bool,
     keyword_recommended_only: bool,
+    hotness_recommended_only: bool = False,
     sort_by: str,
     sort_order: str,
 ) -> list[dict]:
@@ -241,6 +251,7 @@ async def load_all_result_records(
         filename,
         ai_recommended_only,
         keyword_recommended_only,
+        hotness_recommended_only,
         sort_by,
         sort_order,
     )
@@ -250,6 +261,7 @@ def _load_all_result_records_sync(
     filename: str,
     ai_recommended_only: bool,
     keyword_recommended_only: bool,
+    hotness_recommended_only: bool,
     sort_by: str,
     sort_order: str,
 ) -> list[dict]:
@@ -258,6 +270,7 @@ def _load_all_result_records_sync(
         filename=filename,
         ai_recommended_only=ai_recommended_only,
         keyword_recommended_only=keyword_recommended_only,
+        hotness_recommended_only=hotness_recommended_only,
     )
     order_clause = _sort_expression(sort_by, sort_order)
     with sqlite_connection() as conn:
@@ -298,6 +311,7 @@ def _load_result_summary_sync(filename: str) -> dict | None:
                 SUM(CASE WHEN is_recommended = 1 THEN 1 ELSE 0 END) AS recommended_items,
                 SUM(CASE WHEN is_recommended = 1 AND analysis_source = 'ai' THEN 1 ELSE 0 END) AS ai_recommended_items,
                 SUM(CASE WHEN is_recommended = 1 AND analysis_source = 'keyword' THEN 1 ELSE 0 END) AS keyword_recommended_items,
+                SUM(CASE WHEN is_recommended = 1 AND analysis_source = 'hotness' THEN 1 ELSE 0 END) AS hotness_recommended_items,
                 MAX(crawl_time) AS latest_crawl_time
             FROM result_items
             WHERE result_filename = ?
@@ -330,6 +344,7 @@ def _load_result_summary_sync(filename: str) -> dict | None:
         "recommended_items": int(aggregate_row["recommended_items"] or 0),
         "ai_recommended_items": int(aggregate_row["ai_recommended_items"] or 0),
         "keyword_recommended_items": int(aggregate_row["keyword_recommended_items"] or 0),
+        "hotness_recommended_items": int(aggregate_row["hotness_recommended_items"] or 0),
         "latest_crawl_time": aggregate_row["latest_crawl_time"],
         "latest_record": (
             _parse_raw_record(str(latest_record["raw_json"])) if latest_record else None

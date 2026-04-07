@@ -23,6 +23,20 @@ class TaskStatus(str, Enum):
     SCHEDULED = "scheduled"
 
 
+class HotnessConfig(BaseModel):
+    """热度模式配置"""
+
+    model_config = ConfigDict(extra="ignore")
+
+    collect_per_minute: Optional[float] = None   # 每分钟收藏阈值
+    want_per_minute: Optional[float] = None      # 每分钟想要阈值
+    browse_per_minute: Optional[float] = None     # 每分钟浏览阈值
+    condition_logic: Literal["or", "and"] = "or"  # 条件组合逻辑
+    max_monitor_hours: Optional[float] = None     # 最大监测时长（小时）
+    max_check_count: Optional[int] = None         # 最大检查次数
+    max_recheck_per_run: int = 10                 # 每次巡检的商品数量上限（风控保护）
+
+
 def _normalize_keyword_values(value) -> List[str]:
     if value is None:
         return []
@@ -127,8 +141,9 @@ class Task(BaseModel):
     free_shipping: bool = True
     new_publish_option: Optional[str] = None
     region: Optional[str] = None
-    decision_mode: Literal["ai", "keyword"] = "ai"
+    decision_mode: Literal["ai", "keyword", "hotness"] = "ai"
     keyword_rules: List[str] = Field(default_factory=list)
+    hotness_config: Optional[HotnessConfig] = None
     is_running: bool = False
 
     @model_validator(mode="before")
@@ -177,8 +192,9 @@ class TaskCreate(BaseModel):
     free_shipping: bool = True
     new_publish_option: Optional[str] = None
     region: Optional[str] = None
-    decision_mode: Literal["ai", "keyword"] = "ai"
+    decision_mode: Literal["ai", "keyword", "hotness"] = "ai"
     keyword_rules: List[str] = Field(default_factory=list)
+    hotness_config: Optional[HotnessConfig] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -217,6 +233,8 @@ class TaskCreate(BaseModel):
             raise ValueError("AI 判断模式下，详细需求(description)不能为空。")
         if self.decision_mode == "keyword" and not _has_keyword_rules(self.keyword_rules):
             raise ValueError("关键词判断模式下，至少需要一个关键词。")
+        if self.decision_mode == "hotness" and self.hotness_config is None:
+            raise ValueError("热度判断模式下，必须配置热度参数(hotness_config)。")
         if self.account_strategy == "fixed" and not self.account_state_file:
             raise ValueError("固定账号模式下必须选择账号。")
         return self
@@ -244,8 +262,9 @@ class TaskUpdate(BaseModel):
     free_shipping: Optional[bool] = None
     new_publish_option: Optional[str] = None
     region: Optional[str] = None
-    decision_mode: Optional[Literal["ai", "keyword"]] = None
+    decision_mode: Optional[Literal["ai", "keyword", "hotness"]] = None
     keyword_rules: Optional[List[str]] = None
+    hotness_config: Optional[HotnessConfig] = None
     is_running: Optional[bool] = None
 
     @model_validator(mode="before")
@@ -308,8 +327,9 @@ class TaskGenerateRequest(BaseModel):
     free_shipping: bool = True
     new_publish_option: Optional[str] = None
     region: Optional[str] = None
-    decision_mode: Literal["ai", "keyword"] = "ai"
+    decision_mode: Literal["ai", "keyword", "hotness"] = "ai"
     keyword_rules: List[str] = Field(default_factory=list)
+    hotness_config: Optional[HotnessConfig] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -353,6 +373,8 @@ class TaskGenerateRequest(BaseModel):
             raise ValueError("AI 判断模式下，详细需求(description)不能为空。")
         if self.decision_mode == "keyword" and not _has_keyword_rules(self.keyword_rules):
             raise ValueError("关键词判断模式下，至少需要一个关键词。")
+        if self.decision_mode == "hotness" and self.hotness_config is None:
+            raise ValueError("热度判断模式下，必须配置热度参数(hotness_config)。")
         if self.account_strategy == "fixed" and not self.account_state_file:
             raise ValueError("固定账号模式下必须选择账号。")
         return self

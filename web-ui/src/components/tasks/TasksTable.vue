@@ -25,7 +25,8 @@ import {
   Layers,
   MapPin,
   RefreshCcw,
-  Search
+  Search,
+  Flame,
 } from 'lucide-vue-next'
 import { formatCountdown, formatNextRunAbsolute } from '@/lib/taskSchedule'
 
@@ -39,6 +40,7 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 const isStopping = (id: number) => props.stoppingIds?.has(id) ?? false
 const isKeywordMode = (task: Task) => task.decision_mode === 'keyword'
+const isHotnessMode = (task: Task) => task.decision_mode === 'hotness'
 const nowMs = ref(Date.now())
 let timer: number | null = null
 
@@ -160,11 +162,11 @@ const emit = defineEmits<{
                     variant="outline" 
                     :class="[
                       'h-4 px-1.5 text-[9px] font-black border-none tracking-tighter', 
-                      isKeywordMode(task) ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-600'
+                      isHotnessMode(task) ? 'bg-orange-50 text-orange-500' : isKeywordMode(task) ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-600'
                     ]"
                   >
-                    <component :is="isKeywordMode(task) ? Keyboard : BrainCircuit" class="w-2.5 h-2.5 mr-1" />
-                    {{ isKeywordMode(task) ? 'KEYWORD' : 'AI ENGINE' }}
+                    <component :is="isHotnessMode(task) ? Flame : isKeywordMode(task) ? Keyboard : BrainCircuit" class="w-2.5 h-2.5 mr-1" />
+                    {{ isHotnessMode(task) ? 'HOTNESS' : isKeywordMode(task) ? 'KEYWORD' : 'AI ENGINE' }}
                   </Badge>
                 </div>
                 
@@ -212,10 +214,16 @@ const emit = defineEmits<{
               </div>
             </TableCell>
 
-            <!-- Column 4: AI/Keyword Mode Details -->
+            <!-- Column 4: AI/Keyword/Hotness Mode Details -->
             <TableCell class="align-middle text-center">
               <div class="inline-flex flex-col items-center gap-2">
-                <div v-if="isKeywordMode(task)" class="bg-blue-50/30 p-2 rounded-xl border border-blue-100/50">
+                <div v-if="isHotnessMode(task)" class="bg-orange-50/30 p-2 rounded-xl border border-orange-100/50">
+                  <div class="text-xs font-black text-orange-600">{{ t('tasks.table.hotnessMode') }}</div>
+                  <div class="text-[9px] font-bold text-orange-400/70 uppercase mt-0.5 tracking-tighter">
+                    {{ task.hotness_config?.condition_logic === 'and' ? 'AND Logic' : 'OR Logic' }}
+                  </div>
+                </div>
+                <div v-else-if="isKeywordMode(task)" class="bg-blue-50/30 p-2 rounded-xl border border-blue-100/50">
                   <div class="text-xs font-black text-blue-600">{{ t('tasks.table.keywordStrategies', { count: task.keyword_rules?.length || 0 }) }}</div>
                   <div class="text-[9px] font-bold text-blue-400/70 uppercase mt-0.5 tracking-tighter">OR Logic</div>
                 </div>

@@ -8,6 +8,7 @@ export interface DashboardSummary {
   recommended_items: number
   ai_recommended_items: number
   keyword_recommended_items: number
+  hotness_recommended_items: number
   last_updated_at: string | null
 }
 

@@ -105,6 +105,7 @@ async function handleDeleteResults() {
       v-model:selectedFile="selectedFile"
       v-model:aiRecommendedOnly="filters.ai_recommended_only"
       v-model:keywordRecommendedOnly="filters.keyword_recommended_only"
+      v-model:hotnessRecommendedOnly="filters.hotness_recommended_only"
       v-model:sortBy="filters.sort_by"
       v-model:sortOrder="filters.sort_order"
       :is-loading="isLoading"

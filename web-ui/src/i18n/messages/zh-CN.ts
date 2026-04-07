@@ -93,7 +93,7 @@ const zhCN = {
       monitoredTasks: '监测任务',
       runningCount: '运行中 {count} 个',
       resultFiles: '结果文件 {count} 个',
-      recommendedBreakdown: 'AI {ai} / 关键词 {keyword}',
+      recommendedBreakdown: 'AI {ai} / 关键词 {keyword} / 热度 {hotness}',
       showAllTasks: '当前展示全部任务',
     },
     focus: {
@@ -141,6 +141,7 @@ const zhCN = {
       asc: '升序',
       aiOnly: '仅看AI推荐',
       keywordOnly: '仅看关键词推荐',
+      hotnessOnly: '仅看热度推荐',
       exportCsv: '导出 CSV',
       deleteResult: '删除结果',
       noResultToDelete: '暂无可删除的结果',

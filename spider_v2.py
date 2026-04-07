@@ -99,7 +99,7 @@ async def main():
     # 读取所有prompt文件内容（关键词模式不需要加载prompt）
     for task in tasks_config:
         decision_mode = str(task.get("decision_mode", "ai")).strip().lower()
-        if decision_mode not in {"ai", "keyword"}:
+        if decision_mode not in {"ai", "keyword", "hotness"}:
             decision_mode = "ai"
         task["decision_mode"] = decision_mode
         keyword_rules = task.get("keyword_rules")
@@ -108,7 +108,7 @@ async def main():
         else:
             task["keyword_rules"] = normalize_keywords(keyword_rules)
 
-        if decision_mode == "keyword":
+        if decision_mode in ("keyword", "hotness"):
             task["ai_prompt_text"] = ""
             continue
 

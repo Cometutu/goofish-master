@@ -29,6 +29,7 @@ export function useResults() {
     recommended_only: false,
     ai_recommended_only: false,
     keyword_recommended_only: false,
+    hotness_recommended_only: false,
     sort_by: 'crawl_time',
     sort_order: 'desc',
   })

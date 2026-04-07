@@ -133,12 +133,14 @@ async def export_result_file_content(
     recommended_only: bool = Query(False),
     ai_recommended_only: bool = Query(False),
     keyword_recommended_only: bool = Query(False),
+    hotness_recommended_only: bool = Query(False),
     sort_by: str = Query("crawl_time"),
     sort_order: str = Query("desc"),
 ):
-    if ai_recommended_only and keyword_recommended_only:
-        raise HTTPException(status_code=400, detail="AI推荐筛选与关键词推荐筛选不能同时开启。")
-    if recommended_only and not ai_recommended_only and not keyword_recommended_only:
+    active_filters = sum([ai_recommended_only, keyword_recommended_only, hotness_recommended_only])
+    if active_filters > 1:
+        raise HTTPException(status_code=400, detail="AI推荐、关键词推荐、热度推荐筛选不能同时开启，请只选择其中一个。")
+    if recommended_only and not ai_recommended_only and not keyword_recommended_only and not hotness_recommended_only:
         ai_recommended_only = True
 
     try:
@@ -147,6 +149,7 @@ async def export_result_file_content(
             filename,
             ai_recommended_only=ai_recommended_only,
             keyword_recommended_only=keyword_recommended_only,
+            hotness_recommended_only=hotness_recommended_only,
             sort_by=sort_by,
             sort_order=sort_order,
         )

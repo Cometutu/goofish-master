@@ -89,6 +89,29 @@ SCHEMA_STATEMENTS = (
         UNIQUE(keyword_slug, run_id, item_id)
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS hotness_watchlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        keyword TEXT NOT NULL,
+        task_name TEXT NOT NULL,
+        item_id TEXT NOT NULL,
+        link TEXT NOT NULL,
+        link_unique_key TEXT NOT NULL,
+        title TEXT,
+        price_display TEXT,
+        publish_time TEXT,
+        publish_timestamp INTEGER,
+        first_crawl_time TEXT NOT NULL,
+        last_check_time TEXT NOT NULL,
+        check_count INTEGER NOT NULL DEFAULT 1,
+        last_want_cnt INTEGER DEFAULT 0,
+        last_browse_cnt INTEGER DEFAULT 0,
+        last_collect_cnt INTEGER DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'watching',
+        raw_item_json TEXT,
+        UNIQUE(keyword, item_id)
+    )
+    """,
     "CREATE INDEX IF NOT EXISTS idx_tasks_name ON tasks(task_name)",
     """
     CREATE INDEX IF NOT EXISTS idx_results_filename_crawl
@@ -114,6 +137,16 @@ SCHEMA_STATEMENTS = (
     CREATE INDEX IF NOT EXISTS idx_snapshots_keyword_item_time
     ON price_snapshots(keyword_slug, item_id, snapshot_time DESC)
     """,
+    """
+    CREATE INDEX IF NOT EXISTS idx_hotness_watchlist_keyword_status
+    ON hotness_watchlist(keyword, status)
+    """,
+)
+
+
+MIGRATION_STATEMENTS = (
+    # Add hotness_config_json column to tasks table (safe to re-run)
+    "ALTER TABLE tasks ADD COLUMN hotness_config_json TEXT DEFAULT '{}'",
 )
 
 
@@ -134,6 +167,12 @@ def _apply_pragmas(conn: sqlite3.Connection) -> None:
 def init_schema(conn: sqlite3.Connection) -> None:
     for statement in SCHEMA_STATEMENTS:
         conn.execute(statement)
+    for statement in MIGRATION_STATEMENTS:
+        try:
+            conn.execute(statement)
+        except sqlite3.OperationalError:
+            # Column/table already exists — safe to ignore.
+            pass
     conn.commit()
 
 

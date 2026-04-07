@@ -1,5 +1,15 @@
 // Based on the Pydantic model in the backend
 
+export interface HotnessConfig {
+  collect_per_minute?: number | null;
+  want_per_minute?: number | null;
+  browse_per_minute?: number | null;
+  condition_logic: 'or' | 'and';
+  max_monitor_hours?: number | null;
+  max_check_count?: number | null;
+  max_recheck_per_run: number;
+}
+
 export interface Task {
   id: number;
   task_name: string;
@@ -20,8 +30,9 @@ export interface Task {
   free_shipping?: boolean;
   new_publish_option?: string | null;
   region?: string | null;
-  decision_mode: 'ai' | 'keyword';
+  decision_mode: 'ai' | 'keyword' | 'hotness';
   keyword_rules: string[];
+  hotness_config?: HotnessConfig | null;
   is_running: boolean;
 }
 
@@ -71,6 +82,7 @@ export interface TaskGenerateRequest {
   free_shipping?: boolean;
   new_publish_option?: string | null;
   region?: string | null;
-  decision_mode?: 'ai' | 'keyword';
+  decision_mode?: 'ai' | 'keyword' | 'hotness';
   keyword_rules?: string[];
+  hotness_config?: HotnessConfig | null;
 }

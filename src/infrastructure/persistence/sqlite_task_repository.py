@@ -7,7 +7,7 @@ import asyncio
 import json
 from typing import List, Optional
 
-from src.domain.models.task import Task
+from src.domain.models.task import HotnessConfig, Task
 from src.domain.repositories.task_repository import TaskRepository
 from src.infrastructure.persistence.sqlite_bootstrap import bootstrap_sqlite_storage
 from src.infrastructure.persistence.sqlite_connection import sqlite_connection
@@ -21,6 +21,9 @@ def _row_to_task(row) -> Task:
     payload["free_shipping"] = bool(payload["free_shipping"])
     payload["is_running"] = bool(payload["is_running"])
     payload["keyword_rules"] = json.loads(payload.pop("keyword_rules_json") or "[]")
+    raw_hotness = payload.pop("hotness_config_json", None) or "{}"
+    hotness_data = json.loads(raw_hotness)
+    payload["hotness_config"] = HotnessConfig(**hotness_data) if hotness_data else None
     return Task(**payload)
 
 
@@ -92,13 +95,13 @@ class SqliteTaskRepository(TaskRepository):
                     max_pages, personal_only, min_price, max_price, cron,
                     ai_prompt_base_file, ai_prompt_criteria_file, account_state_file,
                     account_strategy, free_shipping, new_publish_option, region,
-                    decision_mode, keyword_rules_json, is_running
+                    decision_mode, keyword_rules_json, hotness_config_json, is_running
                 ) VALUES (
                     :id, :task_name, :enabled, :keyword, :description, :analyze_images,
                     :max_pages, :personal_only, :min_price, :max_price, :cron,
                     :ai_prompt_base_file, :ai_prompt_criteria_file, :account_state_file,
                     :account_strategy, :free_shipping, :new_publish_option, :region,
-                    :decision_mode, :keyword_rules_json, :is_running
+                    :decision_mode, :keyword_rules_json, :hotness_config_json, :is_running
                 )
                 """,
                 payload,
@@ -129,4 +132,9 @@ class SqliteTaskRepository(TaskRepository):
         values["is_running"] = int(task.is_running)
         values["keyword_rules_json"] = json.dumps(task.keyword_rules or [], ensure_ascii=False)
         values.pop("keyword_rules", None)
+        hotness_cfg = values.pop("hotness_config", None)
+        if hotness_cfg and isinstance(hotness_cfg, dict):
+            values["hotness_config_json"] = json.dumps(hotness_cfg, ensure_ascii=False)
+        else:
+            values["hotness_config_json"] = "{}"
         return values

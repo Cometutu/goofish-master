@@ -24,6 +24,7 @@ interface Props {
   selectedFile: string | null
   aiRecommendedOnly: boolean
   keywordRecommendedOnly: boolean
+  hotnessRecommendedOnly: boolean
   sortBy: 'crawl_time' | 'publish_time' | 'price' | 'keyword_hit_count'
   sortOrder: 'asc' | 'desc'
   isLoading: boolean
@@ -66,6 +67,7 @@ const emit = defineEmits<{
   (e: 'update:selectedFile', value: string): void
   (e: 'update:aiRecommendedOnly', value: boolean): void
   (e: 'update:keywordRecommendedOnly', value: boolean): void
+  (e: 'update:hotnessRecommendedOnly', value: boolean): void
   (e: 'update:sortBy', value: 'crawl_time' | 'publish_time' | 'price' | 'keyword_hit_count'): void
   (e: 'update:sortOrder', value: 'asc' | 'desc'): void
   (e: 'refresh'): void
@@ -77,6 +79,7 @@ function handleToggleAiRecommended(value: boolean) {
   emit('update:aiRecommendedOnly', value)
   if (value) {
     emit('update:keywordRecommendedOnly', false)
+    emit('update:hotnessRecommendedOnly', false)
   }
 }
 
@@ -84,6 +87,15 @@ function handleToggleKeywordRecommended(value: boolean) {
   emit('update:keywordRecommendedOnly', value)
   if (value) {
     emit('update:aiRecommendedOnly', false)
+    emit('update:hotnessRecommendedOnly', false)
+  }
+}
+
+function handleToggleHotnessRecommended(value: boolean) {
+  emit('update:hotnessRecommendedOnly', value)
+  if (value) {
+    emit('update:aiRecommendedOnly', false)
+    emit('update:keywordRecommendedOnly', false)
   }
 }
 </script>
@@ -150,6 +162,15 @@ function handleToggleKeywordRecommended(value: boolean) {
         @update:modelValue="(value) => handleToggleKeywordRecommended(value === true)"
       />
       <Label for="keyword-recommended-only" class="cursor-pointer">{{ t('results.filters.keywordOnly') }}</Label>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <Checkbox
+        id="hotness-recommended-only"
+        :model-value="props.hotnessRecommendedOnly"
+        @update:modelValue="(value) => handleToggleHotnessRecommended(value === true)"
+      />
+      <Label for="hotness-recommended-only" class="cursor-pointer">{{ t('results.filters.hotnessOnly') }}</Label>
     </div>
 
     <Button @click="emit('refresh')" :disabled="props.isLoading">

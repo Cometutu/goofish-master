@@ -167,6 +167,14 @@ async def update_task(
             )
             if not _has_keyword_rules(final_rules):
                 raise HTTPException(status_code=400, detail="关键词模式下至少需要一个关键词。")
+        if target_mode == "hotness":
+            final_hotness = (
+                task_update.hotness_config
+                if task_update.hotness_config is not None
+                else getattr(existing_task, "hotness_config", None)
+            )
+            if final_hotness is None:
+                raise HTTPException(status_code=400, detail="热度模式下必须配置热度参数。")
         if target_mode == "ai" and (description_changed or switched_to_ai):
             print(f"检测到任务 {task_id} 需要刷新 AI 标准文件，开始重新生成...")
             try:
