@@ -1312,6 +1312,8 @@ async def scrape_xianyu(task_config: dict, debug_limit: int = 0):
 
                         except PlaywrightTimeoutError:
                             print(f"   错误: 访问商品详情页或等待API响应超时。")
+                        except (RiskControlError, LoginRequiredError):
+                            raise
                         except Exception as e:
                             print(f"   错误: 处理商品详情时发生未知错误: {e}")
                         finally:
