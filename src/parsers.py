@@ -30,11 +30,19 @@ async def _parse_search_results_json(json_data: dict, source: str) -> list:
             seller = await safe_get(main_data, "userNickName", default="匿名卖家")
             raw_link = await safe_get(item, "data", "item", "main", "targetUrl", default="")
             image_url = await safe_get(main_data, "picUrl", default="")
-            pub_time_ts = click_params.get("publishTime", "")
+            raw_pub_time = click_params.get("publishTime", "")
+            # 兼容 API 返回 int 或 str 类型的时间戳
+            pub_time_str = str(raw_pub_time) if raw_pub_time else ""
             item_id = await safe_get(main_data, "itemId", default="未知ID")
             original_price = await safe_get(main_data, "oriPrice", default="暂无")
             wants_count = await safe_get(click_params, "wantNum", default='NaN')
 
+            # 解析发布时间：保留原始毫秒时间戳供热度模式使用
+            publish_timestamp_ms = None
+            publish_time_display = "未知时间"
+            if pub_time_str.isdigit():
+                publish_timestamp_ms = int(pub_time_str)
+                publish_time_display = datetime.fromtimestamp(publish_timestamp_ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
 
             tags = []
             if await safe_get(click_params, "tag") == "freeship":
@@ -49,12 +57,13 @@ async def _parse_search_results_json(json_data: dict, source: str) -> list:
                 "商品标题": title,
                 "当前售价": price,
                 "商品原价": original_price,
-                "“想要”人数": wants_count,
+                "\u201c想要\u201d人数": wants_count,
                 "商品标签": tags,
                 "发货地区": area,
                 "卖家昵称": seller,
                 "商品链接": raw_link.replace("fleamarket://", "https://www.goofish.com/"),
-                "发布时间": datetime.fromtimestamp(int(pub_time_ts)/1000).strftime("%Y-%m-%d %H:%M") if pub_time_ts.isdigit() else "未知时间",
+                "发布时间": publish_time_display,
+                "发布时间戳": publish_timestamp_ms,
                 "商品ID": item_id
             })
         print(f"LOG: ({source}) 成功解析到 {len(page_data)} 条商品基础信息。")

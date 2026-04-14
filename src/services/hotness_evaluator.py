@@ -44,7 +44,7 @@ def _parse_timestamp_ms(value) -> Optional[int]:
         return int(value)
     # 尝试解析 ISO 格式
     if isinstance(value, str):
-        for fmt in ("%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+        for fmt in ("%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
             try:
                 dt = datetime.strptime(value, fmt)
                 return int(dt.timestamp() * 1000)
